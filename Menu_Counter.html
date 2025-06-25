@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>식사 메뉴 주문 카운터</title>
+  <style>
+    :root {
+      --primary-color: #1e88e5;
+      --accent-color: #e53935;
+      --bg-color: #f4f6f8;
+      --card-bg: #ffffff;
+      --text-color: #333333;
+      --font: 'Segoe UI', 'Noto Sans KR', sans-serif;
+    }
+
+    body {
+      font-family: var(--font);
+      background-color: var(--bg-color);
+      margin: 0;
+      padding: 2rem 1rem;
+      color: var(--text-color);
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.6rem;
+      margin-bottom: 2rem;
+      font-weight: 600;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .menu-input {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 0.8rem 1rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      background-color: #ffffff;
+      transition: box-shadow 0.2s;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--primary-color);
+    }
+
+    button {
+      padding: 0.8rem 1rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 12px;
+      background-color: var(--primary-color);
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+
+    button:hover {
+      background-color: #1565c0;
+    }
+
+    button:active {
+      transform: scale(0.95);
+    }
+
+    .menu-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .menu-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: var(--card-bg);
+      padding: 1rem;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      transition: transform 0.2s;
+      touch-action: pan-y;
+    }
+
+    .menu-name {
+      font-weight: 500;
+      font-size: 1.1rem;
+      outline: none;
+      position: relative;
+      min-width: 140px;
+    }
+
+    .menu-name.empty::before {
+      content: '메뉴 이름 입력';
+      color: #aaa;
+      font-style: italic;
+      position: absolute;
+      left: 0;
+      top: 0;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .menu-count {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .menu-count button {
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      font-size: 1.2rem;
+      background-color: var(--primary-color);
+    }
+
+    .menu-count button:hover {
+      background-color: #1565c0;
+    }
+
+    .count-number {
+      font-size: 1.1rem;
+      min-width: 2rem;
+      text-align: center;
+    }
+
+    .reset-container {
+      text-align: center;
+      margin-top: 2rem;
+    }
+
+    .reset-button {
+      background-color: var(--accent-color);
+    }
+
+    .reset-button:hover {
+      background-color: #b71c1c;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>식사 메뉴 주문 카운터</h1>
+
+    <div class="menu-input">
+      <input type="text" id="menuName" placeholder="메뉴 이름을 입력하세요" />
+      <button onclick="addMenu()">추가</button>
+    </div>
+
+    <div class="menu-list" id="menuList"></div>
+
+    <div class="reset-container">
+      <button class="reset-button" onclick="resetAll()">전체 초기화</button>
+    </div>
+  </div>
+
+  <script>
+    const menuList = document.getElementById('menuList');
+
+    function addMenu() {
+      const nameInput = document.getElementById('menuName');
+      const name = nameInput.value.trim();
+      if (!name) return;
+
+      const menuItem = createMenuItem(name);
+      menuList.appendChild(menuItem);
+
+      nameInput.value = '';
+      nameInput.focus();
+    }
+
+    function createMenuItem(name) {
+      const menuItem = document.createElement('div');
+      menuItem.className = 'menu-item';
+
+      let startX = 0;
+      menuItem.addEventListener('touchstart', e => startX = e.touches[0].clientX);
+      menuItem.addEventListener('touchend', e => {
+        const endX = e.changedTouches[0].clientX;
+        if (startX - endX > 50) {
+          if (confirm('이 메뉴를 삭제하시겠습니까?')) menuList.removeChild(menuItem);
+        }
+      });
+
+      const nameDiv = document.createElement('div');
+      nameDiv.className = 'menu-name';
+      nameDiv.textContent = name;
+      nameDiv.setAttribute('contenteditable', 'true');
+
+      let originalText = name;
+      nameDiv.addEventListener('focus', () => {
+        if (nameDiv.textContent.trim() !== '') originalText = nameDiv.textContent.trim();
+        nameDiv.textContent = '';
+        nameDiv.classList.add('empty');
+      });
+      nameDiv.addEventListener('blur', () => {
+        if (nameDiv.textContent.trim() === '') {
+          nameDiv.textContent = originalText;
+          nameDiv.classList.remove('empty');
+        }
+      });
+      nameDiv.addEventListener('input', () => {
+        if (nameDiv.textContent.trim() === '') nameDiv.classList.add('empty');
+        else nameDiv.classList.remove('empty');
+      });
+      nameDiv.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          nameDiv.blur();
+        }
+      });
+
+      const countDiv = document.createElement('div');
+      countDiv.className = 'menu-count';
+
+      const minusButton = document.createElement('button');
+      minusButton.textContent = '-';
+
+      const countSpan = document.createElement('span');
+      countSpan.className = 'count-number';
+      countSpan.textContent = '0';
+
+      const plusButton = document.createElement('button');
+      plusButton.textContent = '+';
+
+      plusButton.onclick = () => {
+        countSpan.textContent = parseInt(countSpan.textContent) + 1;
+      };
+
+      minusButton.onclick = () => {
+        const current = parseInt(countSpan.textContent);
+        if (current > 0) countSpan.textContent = current - 1;
+      };
+
+      countDiv.appendChild(minusButton);
+      countDiv.appendChild(countSpan);
+      countDiv.appendChild(plusButton);
+
+      menuItem.appendChild(nameDiv);
+      menuItem.appendChild(countDiv);
+
+      return menuItem;
+    }
+
+    function resetAll() {
+      if (confirm('모든 메뉴와 수량을 초기화하시겠습니까?')) {
+        menuList.innerHTML = '';
+      }
+    }
+  </script>
+</body>
+</html>
