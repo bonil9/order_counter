@@ -1,264 +1,397 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>식사 메뉴 주문 카운터</title>
-  <style>
-    :root {
-      --primary-color: #1e88e5;
-      --accent-color: #e53935;
-      --bg-color: #f4f6f8;
-      --card-bg: #ffffff;
-      --text-color: #333333;
-      --font: 'Segoe UI', 'Noto Sans KR', sans-serif;
-    }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>식사 메뉴 주문 카운터</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles to override or extend Tailwind */
+        body {
+            font-family: 'Inter', 'Noto Sans KR', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
 
-    body {
-      font-family: var(--font);
-      background-color: var(--bg-color);
-      margin: 0;
-      padding: 2rem 1rem;
-      color: var(--text-color);
-    }
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
 
-    h1 {
-      text-align: center;
-      font-size: 1.6rem;
-      margin-bottom: 2rem;
-      font-weight: 600;
-    }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
 
-    .container {
-      max-width: 500px;
-      margin: 0 auto;
-    }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
 
-    .menu-input {
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 1.5rem;
-    }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
 
-    input[type="text"] {
-      flex: 1;
-      padding: 0.8rem 1rem;
-      font-size: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 12px;
-      background-color: #ffffff;
-      transition: box-shadow 0.2s;
-    }
+        /* Modal specific styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
 
-    input[type="text"]:focus {
-      outline: none;
-      box-shadow: 0 0 0 2px var(--primary-color);
-    }
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
 
-    button {
-      padding: 0.8rem 1rem;
-      font-size: 1rem;
-      border: none;
-      border-radius: 12px;
-      background-color: var(--primary-color);
-      color: white;
-      cursor: pointer;
-      transition: background-color 0.2s, transform 0.1s;
-    }
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            max-width: 90%;
+            width: 400px;
+            transform: translateY(-20px);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
 
-    button:hover {
-      background-color: #1565c0;
-    }
+        .modal-overlay.show .modal-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
 
-    button:active {
-      transform: scale(0.95);
-    }
-
-    .menu-list {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .menu-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background-color: var(--card-bg);
-      padding: 1rem;
-      border-radius: 16px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-      transition: transform 0.2s;
-      touch-action: pan-y;
-    }
-
-    .menu-name {
-      font-weight: 500;
-      font-size: 1.1rem;
-      outline: none;
-      position: relative;
-      min-width: 140px;
-    }
-
-    .menu-name.empty::before {
-      content: '메뉴 이름 입력';
-      color: #aaa;
-      font-style: italic;
-      position: absolute;
-      left: 0;
-      top: 0;
-      pointer-events: none;
-      white-space: nowrap;
-    }
-
-    .menu-count {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .menu-count button {
-      border-radius: 50%;
-      width: 36px;
-      height: 36px;
-      padding: 0;
-      font-size: 1.2rem;
-      background-color: var(--primary-color);
-    }
-
-    .menu-count button:hover {
-      background-color: #1565c0;
-    }
-
-    .count-number {
-      font-size: 1.1rem;
-      min-width: 2rem;
-      text-align: center;
-    }
-
-    .reset-container {
-      text-align: center;
-      margin-top: 2rem;
-    }
-
-    .reset-button {
-      background-color: var(--accent-color);
-    }
-
-    .reset-button:hover {
-      background-color: #b71c1c;
-    }
-  </style>
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+    </style>
 </head>
-<body>
-  <div class="container">
-    <h1>식사 메뉴 주문 카운터</h1>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div class="container bg-white p-6 rounded-2xl shadow-xl w-full max-w-md">
+        <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">식사 메뉴 주문 카운터</h1>
 
-    <div class="menu-input">
-      <input type="text" id="menuName" placeholder="메뉴 이름을 입력하세요" />
-      <button onclick="addMenu()">추가</button>
+        <div class="flex gap-2 mb-6">
+            <input
+                type="text"
+                id="menuName"
+                placeholder="새 메뉴 이름을 입력하세요"
+                class="flex-1 p-3 text-base border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
+            />
+            <button
+                id="addMenuBtn"
+                class="px-5 py-3 bg-blue-600 text-white font-semibold rounded-xl shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 active:scale-95"
+            >
+                추가
+            </button>
+        </div>
+
+        <div id="menuList" class="flex flex-col gap-4">
+            <!-- Menu items will be dynamically added here -->
+        </div>
+
+        <div class="flex justify-center gap-4 mt-8">
+            <button
+                id="resetCountsBtn"
+                class="px-5 py-3 bg-yellow-500 text-white font-semibold rounded-xl shadow-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 transition duration-200 active:scale-95"
+            >
+                수량 전체 초기화
+            </button>
+            <button
+                id="resetAllBtn"
+                class="px-5 py-3 bg-red-600 text-white font-semibold rounded-xl shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition duration-200 active:scale-95"
+            >
+                전체 메뉴 삭제
+            </button>
+        </div>
     </div>
 
-    <div class="menu-list" id="menuList"></div>
-
-    <div class="reset-container">
-      <button class="reset-button" onclick="resetAll()">전체 초기화</button>
+    <!-- Custom Confirmation Modal -->
+    <div id="customModal" class="modal-overlay">
+        <div class="modal-content">
+            <p id="modalMessage" class="text-lg font-medium text-gray-800 mb-4"></p>
+            <div class="modal-buttons">
+                <button
+                    id="modalConfirmBtn"
+                    class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 active:scale-95"
+                >
+                    확인
+                </button>
+                <button
+                    id="modalCancelBtn"
+                    class="px-6 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition duration-200 active:scale-95"
+                >
+                    취소
+                </button>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <script>
-    const menuList = document.getElementById('menuList');
+    <script type="module">
+        const menuListDiv = document.getElementById('menuList');
+        const menuNameInput = document.getElementById('menuName');
+        const addMenuBtn = document.getElementById('addMenuBtn');
+        const resetCountsBtn = document.getElementById('resetCountsBtn');
+        const resetAllBtn = document.getElementById('resetAllBtn');
 
-    function addMenu() {
-      const nameInput = document.getElementById('menuName');
-      const name = nameInput.value.trim();
-      if (!name) return;
+        // Custom Modal Elements
+        const customModal = document.getElementById('customModal');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+        const modalCancelBtn = document.getElementById('modalCancelBtn');
 
-      const menuItem = createMenuItem(name);
-      menuList.appendChild(menuItem);
+        let resolveModalPromise;
+        let rejectModalPromise;
 
-      nameInput.value = '';
-      nameInput.focus();
-    }
+        // Array to store menu items locally
+        let menuItems = [];
 
-    function createMenuItem(name) {
-      const menuItem = document.createElement('div');
-      menuItem.className = 'menu-item';
+        /**
+         * Displays a custom confirmation modal.
+         * @param {string} message - The message to display in the modal.
+         * @returns {Promise<boolean>} - A promise that resolves to true if confirmed, false if cancelled.
+         */
+        function showCustomConfirm(message) {
+            modalMessage.textContent = message;
+            customModal.classList.add('show');
 
-      let startX = 0;
-      menuItem.addEventListener('touchstart', e => startX = e.touches[0].clientX);
-      menuItem.addEventListener('touchend', e => {
-        const endX = e.changedTouches[0].clientX;
-        if (startX - endX > 50) {
-          if (confirm('이 메뉴를 삭제하시겠습니까?')) menuList.removeChild(menuItem);
+            return new Promise((resolve, reject) => {
+                resolveModalPromise = resolve;
+                rejectModalPromise = reject; // In case of external dismissal, though not implemented here
+
+                const confirmHandler = () => {
+                    customModal.classList.remove('show');
+                    modalConfirmBtn.removeEventListener('click', confirmHandler);
+                    modalCancelBtn.removeEventListener('click', cancelHandler);
+                    resolve(true);
+                };
+
+                const cancelHandler = () => {
+                    customModal.classList.remove('show');
+                    modalConfirmBtn.removeEventListener('click', confirmHandler);
+                    modalCancelBtn.removeEventListener('click', cancelHandler);
+                    resolve(false);
+                };
+
+                modalConfirmBtn.addEventListener('click', confirmHandler);
+                modalCancelBtn.addEventListener('click', cancelHandler);
+            });
         }
-      });
 
-      const nameDiv = document.createElement('div');
-      nameDiv.className = 'menu-name';
-      nameDiv.textContent = name;
-      nameDiv.setAttribute('contenteditable', 'true');
-
-      let originalText = name;
-      nameDiv.addEventListener('focus', () => {
-        if (nameDiv.textContent.trim() !== '') originalText = nameDiv.textContent.trim();
-        nameDiv.textContent = '';
-        nameDiv.classList.add('empty');
-      });
-      nameDiv.addEventListener('blur', () => {
-        if (nameDiv.textContent.trim() === '') {
-          nameDiv.textContent = originalText;
-          nameDiv.classList.remove('empty');
+        /**
+         * Renders all menu items from the menuItems array to the DOM.
+         */
+        function renderMenuItems() {
+            menuListDiv.innerHTML = ''; // Clear current list
+            menuItems.forEach(item => {
+                const menuItemElement = createMenuItemElement(item);
+                menuListDiv.appendChild(menuItemElement);
+            });
         }
-      });
-      nameDiv.addEventListener('input', () => {
-        if (nameDiv.textContent.trim() === '') nameDiv.classList.add('empty');
-        else nameDiv.classList.remove('empty');
-      });
-      nameDiv.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          nameDiv.blur();
+
+        /**
+         * Adds a new menu item to the local array and re-renders.
+         */
+        function addMenu() {
+            const name = menuNameInput.value.trim();
+            if (!name) return;
+
+            const newMenuItem = {
+                id: Date.now().toString(), // Simple unique ID
+                name: name,
+                count: 0
+            };
+            menuItems.push(newMenuItem);
+            renderMenuItems(); // Re-render the list
+            menuNameInput.value = '';
+            menuNameInput.focus();
         }
-      });
 
-      const countDiv = document.createElement('div');
-      countDiv.className = 'menu-count';
+        /**
+         * Creates a DOM element for a menu item.
+         * @param {object} item - The menu item object { id, name, count }.
+         * @returns {HTMLElement} The created menu item element.
+         */
+        function createMenuItemElement(item) {
+            const menuItem = document.createElement('div');
+            menuItem.id = `menu-item-${item.id}`;
+            menuItem.className = 'menu-item flex justify-between items-center bg-white p-4 rounded-xl shadow-md transition-all duration-200 hover:shadow-lg';
+            menuItem.setAttribute('data-id', item.id);
 
-      const minusButton = document.createElement('button');
-      minusButton.textContent = '-';
+            // Menu Name (Content Editable)
+            const nameDiv = document.createElement('div');
+            nameDiv.className = 'menu-name font-medium text-lg text-gray-700 outline-none relative min-w-[140px] px-2 py-1 rounded-md focus:bg-blue-50 focus:ring-1 focus:ring-blue-300';
+            nameDiv.textContent = item.name;
+            nameDiv.setAttribute('contenteditable', 'true');
 
-      const countSpan = document.createElement('span');
-      countSpan.className = 'count-number';
-      countSpan.textContent = '0';
+            let originalText = item.name;
+            nameDiv.addEventListener('focus', () => {
+                if (nameDiv.textContent.trim() !== '') originalText = nameDiv.textContent.trim();
+                nameDiv.textContent = ''; // Clear text on focus
+                nameDiv.classList.add('text-gray-400', 'italic'); // Placeholder style
+                nameDiv.setAttribute('data-placeholder', '메뉴 이름 입력'); // Custom placeholder
+            });
+            nameDiv.addEventListener('blur', () => {
+                const newName = nameDiv.textContent.trim();
+                if (newName === '') {
+                    nameDiv.textContent = originalText; // Revert if empty
+                } else if (newName !== originalText) {
+                    // Update name in local array if changed
+                    updateMenuItem(item.id, { name: newName });
+                    originalText = newName; // Update original text
+                }
+                nameDiv.classList.remove('text-gray-400', 'italic');
+                nameDiv.removeAttribute('data-placeholder');
+            });
+            nameDiv.addEventListener('input', () => {
+                // Remove placeholder style if content is typed
+                if (nameDiv.textContent.trim() !== '') {
+                    nameDiv.classList.remove('text-gray-400', 'italic');
+                    nameDiv.removeAttribute('data-placeholder');
+                } else {
+                    nameDiv.classList.add('text-gray-400', 'italic');
+                    nameDiv.setAttribute('data-placeholder', '메뉴 이름 입력');
+                }
+            });
+            nameDiv.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault(); // Prevent new line
+                    nameDiv.blur(); // Trigger blur to save
+                }
+            });
 
-      const plusButton = document.createElement('button');
-      plusButton.textContent = '+';
+            // Count Controls
+            const countDiv = document.createElement('div');
+            countDiv.className = 'menu-count flex items-center gap-2';
 
-      plusButton.onclick = () => {
-        countSpan.textContent = parseInt(countSpan.textContent) + 1;
-      };
+            const minusButton = document.createElement('button');
+            minusButton.textContent = '-';
+            minusButton.className = 'w-9 h-9 flex items-center justify-center bg-blue-500 text-white font-bold rounded-full shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition duration-200 active:scale-90';
 
-      minusButton.onclick = () => {
-        const current = parseInt(countSpan.textContent);
-        if (current > 0) countSpan.textContent = current - 1;
-      };
+            const countSpan = document.createElement('span');
+            countSpan.className = 'count-number text-xl font-semibold text-gray-800 w-10 text-center';
+            countSpan.textContent = item.count.toString();
 
-      countDiv.appendChild(minusButton);
-      countDiv.appendChild(countSpan);
-      countDiv.appendChild(plusButton);
+            const plusButton = document.createElement('button');
+            plusButton.textContent = '+';
+            plusButton.className = 'w-9 h-9 flex items-center justify-center bg-blue-500 text-white font-bold rounded-full shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition duration-200 active:scale-90';
 
-      menuItem.appendChild(nameDiv);
-      menuItem.appendChild(countDiv);
+            plusButton.onclick = () => updateMenuItem(item.id, { count: item.count + 1 });
+            minusButton.onclick = () => {
+                if (item.count > 0) updateMenuItem(item.id, { count: item.count - 1 });
+            };
 
-      return menuItem;
-    }
+            countDiv.appendChild(minusButton);
+            countDiv.appendChild(countSpan);
+            countDiv.appendChild(plusButton);
 
-    function resetAll() {
-      if (confirm('모든 메뉴와 수량을 초기화하시겠습니까?')) {
-        menuList.innerHTML = '';
-      }
-    }
-  </script>
+            menuItem.appendChild(nameDiv);
+            menuItem.appendChild(countDiv);
+
+            // Swipe to delete functionality (touch devices)
+            let startX = 0;
+            menuItem.addEventListener('touchstart', e => {
+                startX = e.touches[0].clientX;
+                menuItem.style.transition = 'none'; // Disable transition during swipe
+            });
+            menuItem.addEventListener('touchmove', e => {
+                const currentX = e.touches[0].clientX;
+                const diffX = currentX - startX;
+                if (diffX < 0) { // Only allow swiping left
+                    menuItem.style.transform = `translateX(${Math.max(-100, diffX)}px)`; // Limit swipe distance
+                }
+            });
+            menuItem.addEventListener('touchend', async e => {
+                const endX = e.changedTouches[0].clientX;
+                const swipeDistance = startX - endX;
+                menuItem.style.transition = 'transform 0.3s ease-out'; // Re-enable transition
+
+                if (swipeDistance > 80) { // Threshold for swipe to delete
+                    const confirmed = await showCustomConfirm('이 메뉴를 삭제하시겠습니까?');
+                    if (confirmed) {
+                        deleteMenuItem(item.id);
+                        // Animate out the element, then remove from DOM
+                        menuItem.style.transform = 'translateX(-100%)';
+                        menuItem.addEventListener('transitionend', () => menuItem.remove());
+                    } else {
+                        menuItem.style.transform = 'translateX(0)'; // Snap back
+                    }
+                } else {
+                    menuItem.style.transform = 'translateX(0)'; // Snap back if not enough swipe
+                }
+            });
+
+            return menuItem;
+        }
+
+        /**
+         * Updates a menu item in the local array and re-renders.
+         * @param {string} id - The ID of the menu item.
+         * @param {object} updates - An object containing fields to update (e.g., { count: 5 }).
+         */
+        function updateMenuItem(id, updates) {
+            const index = menuItems.findIndex(item => item.id === id);
+            if (index !== -1) {
+                menuItems[index] = { ...menuItems[index], ...updates };
+                renderMenuItems(); // Re-render to reflect changes
+            }
+        }
+
+        /**
+         * Deletes a menu item from the local array and re-renders.
+         * @param {string} id - The ID of the menu item to delete.
+         */
+        function deleteMenuItem(id) {
+            menuItems = menuItems.filter(item => item.id !== id);
+            renderMenuItems(); // Re-render to reflect changes
+        }
+
+        /**
+         * Resets all menu item counts to 0 in the local array and re-renders.
+         */
+        async function resetAllCounts() {
+            const confirmed = await showCustomConfirm('모든 메뉴의 수량을 0으로 초기화하시겠습니까?');
+            if (!confirmed) return;
+
+            menuItems = menuItems.map(item => ({ ...item, count: 0 }));
+            renderMenuItems(); // Re-render to reflect changes
+        }
+
+        /**
+         * Deletes all menu items from the local array and re-renders.
+         */
+        async function resetAllMenus() {
+            const confirmed = await showCustomConfirm('모든 메뉴를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.');
+            if (!confirmed) return;
+
+            menuItems = []; // Clear the array
+            renderMenuItems(); // Re-render to reflect changes (empty list)
+        }
+
+        // Event Listeners
+        addMenuBtn.addEventListener('click', addMenu);
+        menuNameInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') addMenu();
+        });
+        resetCountsBtn.addEventListener('click', resetAllCounts);
+        resetAllBtn.addEventListener('click', resetAllMenus);
+
+        // Initial render (empty list on load)
+        renderMenuItems();
+    </script>
 </body>
 </html>
